@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace PrayerNote.Properties
+namespace BibleRecitation.Properties
 {
 
 

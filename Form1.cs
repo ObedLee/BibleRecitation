@@ -1,25 +1,45 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 using System.Windows.Forms;
 
-namespace PrayerNote
+namespace BibleRecitation
 {
-    public partial class PrayerNote : Form
+    public partial class Form1 : Form
     {
-        public PrayerNote()
+        // 음성인식용
+        readonly private static string wavDirPath = Environment.CurrentDirectory + @"\Wav";
+        readonly private static string wavFileName = "record.wav";
+        readonly private static string wavFilePath = wavDirPath + "\\" + wavFileName;
+        readonly private Recorder recorder = new Recorder(0, wavDirPath, wavFileName);
+        readonly private STT stt = new STT(wavFilePath);
+
+        // 성구 리스트
+        readonly private List<BibleVerse> listBV = new List<BibleVerse>();
+
+        // 타이머용
+        readonly private MyTimer myTimer = new MyTimer();
+
+        // 개수 세기
+        private int allVerseCount; // 성경구절의 총 개수
+        private int currentVerseNum;   // 현재 성경구절 번째
+        private int correctVerseCount;   // 맞은 성경구절 개수
+
+        // 랜덤 성구 선정용
+        private int[] randArray;
+        private int index;
+
+        public Form1()
         {
             InitializeComponent();
+            
+            progressBar1.Maximum = myTimer.GetMaxSec() * 100;
+            timer1.Interval = 10;
+
         }
 
         // 로그 저장 함수
-        public void Log_Save(string str)
+        public void LogSave(string str)
         {
             string dirPath = Environment.CurrentDirectory + @"\Log";
             string filePath = dirPath + "\\Log_" + DateTime.Today.ToString("yyyyMMdd") + ".log";
@@ -57,161 +77,329 @@ namespace PrayerNote
             }
         }
 
-        // 날짜 콤보박스 초기화 함수
-        private void Date_Init()
-        {
-            int thisYear = DateTime.Today.Year;
-            int thisMonth = DateTime.Today.Month;
-            int thisDay = DateTime.Today.Day;
 
-            // 년 콤보박스 초기화
-            for (int i = thisYear-30; i <= thisYear+30; i++)
+        // 성경구절 읽어서 리스트에 저장하는 함수
+        private bool ReadVerse(List<BibleVerse> listBV)
+        {
+            string vsDirPath = Environment.CurrentDirectory + @"\Verse";
+            string vsFileName = "verse.txt";
+            string vsFilePath = vsDirPath + "\\" + vsFileName;
+
+            DirectoryInfo di = new DirectoryInfo(vsFilePath);
+            FileInfo fi = new FileInfo(vsFilePath);
+
+            string[] lines;
+
+            string temp;
+
+            try
             {
-                cmbYear.Items.Add(i);
-            }
-            cmbYear.SelectedItem = thisYear;
+                if (!di.Exists) Directory.CreateDirectory(vsDirPath);
 
-            // 달 콤보박스 초기화
-            for (int i = 1; i <= 12; i++)
-            {
-                cmbMonth.Items.Add(i);
-            }
-            cmbMonth.SelectedItem = thisMonth;
-
-            // 일 콤보박스 초기화
-            for (int i = 1; i <= 31; i++)
-            {
-                cmbDay.Items.Add(i);
-            }
-            cmbDay.SelectedItem = thisDay;
-        }
-
-        // 리스트 사이즈 초기화 함수
-        private void List_Size_Init()
-        {
-            // int listCount = listPrayer.Columns.Count; 
-            int listWidth = lstPrayer.Width;
-
-            lstPrayer.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
-
-            lstPrayer.Columns[0].Width = Convert.ToInt32(listWidth * 0.095);
-            lstPrayer.Columns[1].Width = Convert.ToInt32(listWidth * 0.7);
-            lstPrayer.Columns[2].Width = Convert.ToInt32(listWidth * 0.2);
-
-        }
-
-        // 기도제목이 입력되어 있는지 확인
-        bool IsNull_tb(TextBox tb)
-        {
-            if(tb.Text == string.Empty)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        // 창 로드
-        private void PrayerNote_Load(object sender, EventArgs e)
-        {
-            Date_Init();    // 날짜 콤보박스 초기화
-            List_Size_Init();    // 기도제목 리스트뷰 크기 초기화
-        }
-
-        // 창 크기 조절시 사이즈 재조정
-        private void PrayerNote_Resize(object sender, EventArgs e)
-        {
-            List_Size_Init();
-        }
-
-
-        // 기도제목 추가 함수(버튼클릭)
-        private void btnAdd_Click(object sender, EventArgs e)
-        {
-            string log = "";
-            string[] subItem = new string[lstPrayer.Columns.Count];
-
-            if(IsNull_tb(txtPrayerInput))
-            {
-                log = "error: 추가할 기도제목이 없음.";
-                Log_Save(log);
-
-                MessageBox.Show("기도제목을 입력하세요.", "알림");
-
-                return;
-            }
-
-            subItem[0] = (lstPrayer.Items.Count + 1).ToString();
-            subItem[1] = (txtPrayerInput.Text).ToString();
-            subItem[2] = (cmbYear.Text + "-" + cmbMonth.Text + "-" + cmbDay.Text).ToString();
-
-            txtPrayerInput.Clear();
-
-            lstPrayer.Items.Add(new ListViewItem(subItem));
-            
-
-            log = subItem[0] + ", " + subItem[1] + ", " + subItem[2] + " 추가";
-            Log_Save(log);
-
-            MessageBox.Show("기도제목이 추가 되었습니다.", "알림");
-        }
-
-        // 기도제목 삭제 함수(버튼클릭)
-        private void btnRemove_Click(object sender, EventArgs e)
-        {
-            int selectCount = lstPrayer.SelectedItems.Count;
-            int itemCount = 0;
-            string log = "";
-
-            if (selectCount > 0)
-            {
-                for(int i = 0; i < selectCount; i++)
+                if (fi.Exists)
                 {
+                    lines = File.ReadAllLines(vsFilePath);
 
-                    log = lstPrayer.SelectedItems[0].SubItems[0].Text.ToString() + ", "
-                           + lstPrayer.SelectedItems[0].SubItems[1].Text.ToString() + ", "
-                           + lstPrayer.SelectedItems[0].SubItems[2].Text.ToString() + " 삭제";
-                    Log_Save(log);
+                    foreach (string str in lines)
+                    {
+                        string[] subStr = str.Split(')');
 
-                    lstPrayer.Items.RemoveAt(lstPrayer.SelectedItems[0].Index);
+                        if (subStr.Length != 2)
+                        {
+                            temp = "파일이 올바르지 않습니다.";
+                            LogSave("[error] " + temp);
+                            MessageBox.Show(temp, "알림");
+                            return false;
+                        }
+
+                        BibleVerse bv = new BibleVerse(subStr[0], subStr[1]);
+                        listBV.Add(bv);
+                    }
+
+                    temp = string.Format("{0} 성구 추가 완료", listBV.Count);
+                    LogSave(temp);
+
+                    return true;
                 }
-
-                itemCount = lstPrayer.Items.Count;
-
-                for (int i = 0; i < itemCount; i++)
+                else
                 {
-                    lstPrayer.Items[i].SubItems[0].Text = (i+1).ToString();
+                    temp = "파일이 존재하지 않습니다.";
+                    LogSave("[error] " + temp);
+                    MessageBox.Show(temp, "알림");
+                    return false;
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return false;
+            }
+        }
 
-                log = "순번 재정렬";
-                Log_Save(log);
+        // 암송 시작 함수
+        private void RecitStart()
+        {
+            if (!ReadVerse(listBV)) return;
 
-                MessageBox.Show("기도제목이 삭제되었습니다.", "알림");
+            randArray = GetRandomInt(listBV.Count);
 
+            if (numVerse.Value < listBV.Count)
+            {
+                allVerseCount = Convert.ToInt16(numVerse.Value);
             }
             else
             {
-                log = "error: 삭제할 기도제목이 선택되지 않음.";
-                Log_Save(log);
+                allVerseCount = listBV.Count;
+            }
 
-                MessageBox.Show("기도제목을 선택해 주세요.", "알림");
+            currentVerseNum = 1;
+            correctVerseCount = 0;
+            index = randArray[currentVerseNum - 1];
+
+            labAllVerse.Text = allVerseCount.ToString();
+            labCurrentVerse.Text = currentVerseNum.ToString();
+            labCorrectVerse.Text = correctVerseCount.ToString();
+
+            labVerseHead.Text = listBV[index].Head;
+            labVerseBody.Text = listBV[index].Body;
+
+            btnStart.Text = "종료";
+
+            // 암송 시작 후 컨트롤속성 수정
+            gbMode.Enabled = false;
+            txtName.Enabled = false;
+            btnSTT.Enabled = true;
+            btnNext.Enabled = true;
+            txtVerse.Enabled = true;
+            numVerse.Enabled = false;
+            chkShow.Enabled = true;
+            labVerseBody.Visible = false;
+
+            if (rbTest.Checked)
+            {
+                chkShow.Enabled = false;
+                timer1.Enabled = true;
+                timer1.Tick += timer1_Tick;
+            }
+
+            LogSave("성구암송 시작");
+
+        }
+
+        // 암송 종료 함수
+        private void RecitEnd()
+        {
+            myTimer.Reset();
+
+            // 암송 종료 후 컨트롤속성 수정
+            timer1.Enabled = false;
+            btnSTT.Enabled = false;
+            gbMode.Enabled = true;
+            txtName.Enabled = true;
+            btnNext.Enabled = false;
+            labVerseBody.Visible = true;
+            txtVerse.Enabled = false;
+            numVerse.Enabled = true;
+            chkShow.Enabled = false;
+
+            // 암송 종료 후 텍스트 초기화
+            btnStart.Text = "시작";
+            labVerseHead.Text = "두란노 성구암송";
+            labVerseBody.Text = string.Empty;
+            labVerseCheck.Text = string.Empty;
+            txtVerse.Text = string.Empty;
+            labTimer.Text = "00초";
+
+            progressBar1.Value = 0;
+
+            allVerseCount = 0;
+            currentVerseNum = 0;
+            correctVerseCount = 0;
+
+            labAllVerse.Text = allVerseCount.ToString();
+            labCurrentVerse.Text = currentVerseNum.ToString();
+            labCorrectVerse.Text = correctVerseCount.ToString();
+
+            listBV.Clear();
+
+            LogSave("성구암송 종료");
+        }
+
+        // 성구 정답 확인 함수
+        private void VerseCheck(string correct, string answer)
+        {
+            correct = RemoveGap(correct);
+            answer = RemoveGap(answer);
+
+            if (answer.Equals(correct))
+            {
+                labCorrectVerse.Text = (++correctVerseCount).ToString();
+
+                labVerseCheck.Text = "정답 O";
+                labVerseCheck.ForeColor = System.Drawing.Color.Blue;
+                LogSave("성구확인: 정답");
+            }
+            else
+            {
+                labVerseCheck.Text = "오답 X";
+                labVerseCheck.ForeColor = System.Drawing.Color.Red;
+                LogSave("성구확인: 오답");
+            }
+
+        }
+
+        private bool NextVerse()
+        {
+            VerseCheck(txtVerse.Text, listBV[index].Body);
+
+            currentVerseNum++;
+
+            if (currentVerseNum <= allVerseCount)
+            {
+                myTimer.Reset();
+
+                labCurrentVerse.Text = currentVerseNum.ToString();
+
+                index = randArray[currentVerseNum-1];
+                labVerseHead.Text = listBV[index].Head;
+                labVerseBody.Text = listBV[index].Body;
+                
+                txtVerse.Text = string.Empty;
+
+                LogSave("다음 성구");
+
+                return true;
+            }
+            else
+            {
+                RecitEnd();
+                return false;
             }
         }
 
-        // 기도제목 저장 폼 불러오는 함수(버튼클릭)
-        private void btnFileControl_Click(object sender, EventArgs e)
+        // 랜덤 생성 함수
+        private int[] GetRandomInt(int max)
         {
-            FormSave childForm = new FormSave(this, lstPrayer);
-            childForm.ShowDialog();
+            int[] randArray = new int[max];
+            bool isSame;
+
+            Random rand = new Random();
+
+            for (int i = 0; i < max; i++)
+            {
+                while (true)
+                {
+                    randArray[i] = rand.Next(max);
+                    isSame = false;
+
+                    for (int j = 0; j < i; j++)
+                    {
+                        if (randArray[j] == randArray[i])
+                        {
+                            isSame = true;
+                            break;
+                        }
+                    }
+                    if (!isSame) break;
+
+                }
+            }
+
+            return randArray;
+}
+
+        private string RemoveGap(string str)
+        {
+            string noGapStr = string.Empty;
+
+            foreach (char c in str)
+            {
+                if (c != ' ')
+                {
+                    noGapStr += c;
+                }
+            }
+
+            return noGapStr;
         }
 
-        // 엔터기로 기도제목 추가
-        private void txtPrayerInput_KeyDown(object sender, KeyEventArgs e)
+        // 음성인식 시작 및 종료 버튼 함수
+        private void btnSTT_Click(object sender, EventArgs e)
+        {
+            if (btnSTT.Text.Equals("음성인식"))
+            {
+                btnSTT.Text = "인식종료";
+                recorder.StartRecording();  // 녹음시작
+                LogSave("음성인식 시작");
+
+            }
+            else if( btnSTT.Text.Equals("인식종료"))
+            {
+                btnSTT.Text = "음성인식";
+                recorder.RecordEnd();   // 녹음종료
+                txtVerse.Text += stt.Run();    // 음성 텍스트 변환
+                LogSave("음성인식 종료");
+
+            }
+            else btnSTT.Text = "음성인식";
+
+        }
+
+        // 성구암송 시작 및 종료 버튼 함수
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            if (btnStart.Text.Equals("시작"))
+            {
+                RecitStart();
+
+            }
+            else if(btnStart.Text.Equals("종료"))
+            {
+                RecitEnd();
+
+            }
+            else btnStart.Text = "시작";
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            labTimer.Text = string.Format("{0:##}초", myTimer.Sec);
+            progressBar1.Value = Convert.ToInt16(myTimer.Sec * 100 + myTimer.Ms);
+
+            if (myTimer.TimeOver())
+            {
+                LogSave("시간종료");
+
+                if (!NextVerse()) return;
+            }
+
+            myTimer.Decrease();
+
+        }
+
+        private void chkShow_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkShow.Checked == true)
+            {
+                labVerseBody.Visible = true;
+            }
+            else
+            {
+                labVerseBody.Visible = false;
+            }
+        }
+
+        private void txtVerse_KeyDown(object sender, KeyEventArgs e)
         {
             if(e.KeyCode == Keys.Enter)
             {
-                btnAdd_Click(sender, e);
+                NextVerse();
             }
+        }
+
+        private void btnNext_Click(object sender, EventArgs e)
+        {
+            NextVerse();
         }
     }
 }
