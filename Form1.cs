@@ -78,15 +78,7 @@ namespace BibleRecitation
 
         private void ResultSave(int all, int correct)
         {
-            string fileName;
-            if (txtName.Text == string.Empty)
-            {
-                fileName = "익명";
-            }
-            else
-            {
-                fileName = txtName.Text;
-            }
+            string fileName = txtName.Text;
 
             string dirPath = Environment.CurrentDirectory + @"\Result";
             string filePath = dirPath + "\\" + fileName + ".txt"; 
@@ -102,7 +94,7 @@ namespace BibleRecitation
                 {
                     using(StreamWriter sw = new StreamWriter(filePath))
                     {
-                        temp = string.Format("[{0}] {1}개 중 {2}정답", DateTime.Now, all, correct);
+                        temp = string.Format("[{0}] {1}개 중 {2}개 정답", DateTime.Now, all, correct);
                         sw.WriteLine(temp);
                         sw.Close();
                     }
@@ -165,7 +157,7 @@ namespace BibleRecitation
                         listBV.Add(bv);
                     }
 
-                    temp = string.Format("{0} 성구 추가 완료", listBV.Count);
+                    temp = string.Format("{0}개 성구 추가 완료", listBV.Count);
                     LogSave(temp);
 
                     return true;
@@ -224,6 +216,11 @@ namespace BibleRecitation
             chkShow.Enabled = true;
             labVerseBody.Visible = false;
 
+            if (txtName.Text == string.Empty)
+            {
+                txtName.Text = "익명";
+            }
+
             if (rbTest.Checked)
             {
                 chkShow.Enabled = false;
@@ -239,6 +236,15 @@ namespace BibleRecitation
         private void RecitEnd()
         {
             myTimer.Reset();
+
+            if (rbTest.Checked && currentVerseNum != 0)
+            {
+                ResultSave(currentVerseNum, correctVerseCount);
+            }
+
+            string temp = string.Format("{0}님은 {1}개 중 {2}개를 맞추셨습니다.", txtName.Text, currentVerseNum, correctVerseCount);
+            MessageBox.Show(temp, "성구암송 종료");
+
 
             // 암송 종료 후 컨트롤속성 수정
             timer1.Enabled = false;
@@ -271,11 +277,6 @@ namespace BibleRecitation
             labCorrectVerse.Text = correctVerseCount.ToString();
 
             listBV.Clear();
-
-            if (rbTest.Checked && currentVerseNum != 0)
-            {
-                ResultSave(currentVerseNum, correctVerseCount);
-            }
 
             LogSave("성구암송 종료");
         }
