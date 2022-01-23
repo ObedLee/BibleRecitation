@@ -68,7 +68,6 @@ namespace BibleRecitation
                         sw.WriteLine(temp);
                         sw.Close();
                     }
-
                 }
             }
             catch (Exception ex)
@@ -77,6 +76,56 @@ namespace BibleRecitation
             }
         }
 
+        private void ResultSave(int all, int correct)
+        {
+            string fileName;
+            if (txtName.Text == string.Empty)
+            {
+                fileName = "익명";
+            }
+            else
+            {
+                fileName = txtName.Text;
+            }
+
+            string dirPath = Environment.CurrentDirectory + @"\Result";
+            string filePath = dirPath + "\\" + fileName + ".txt"; 
+            string temp;
+
+            DirectoryInfo di = new DirectoryInfo(dirPath);
+            FileInfo fi = new FileInfo(filePath);
+
+            try
+            {
+                if (!di.Exists) Directory.CreateDirectory(dirPath);
+                if (!fi.Exists)
+                {
+                    using(StreamWriter sw = new StreamWriter(filePath))
+                    {
+                        temp = string.Format("[{0}] {1}개 중 {2}정답", DateTime.Now, all, correct);
+                        sw.WriteLine(temp);
+                        sw.Close();
+                    }
+
+                }
+                else
+                {
+                    using (StreamWriter sw = File.AppendText(filePath))
+                    {
+                        temp = string.Format("[{0}] {1}개 중 {2}정답", DateTime.Now, all, correct);
+                        sw.WriteLine(temp);
+                        sw.Close();
+                    }
+                }
+
+                temp = string.Format("{0} 결과 저장 완료", fileName);
+                LogSave(temp);
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
 
         // 성경구절 읽어서 리스트에 저장하는 함수
         private bool ReadVerse(List<BibleVerse> listBV)
@@ -201,6 +250,7 @@ namespace BibleRecitation
             txtVerse.Enabled = false;
             numVerse.Enabled = true;
             chkShow.Enabled = false;
+            chkShow.Checked = false;
 
             // 암송 종료 후 텍스트 초기화
             btnStart.Text = "시작";
@@ -221,6 +271,11 @@ namespace BibleRecitation
             labCorrectVerse.Text = correctVerseCount.ToString();
 
             listBV.Clear();
+
+            if (rbTest.Checked && currentVerseNum != 0)
+            {
+                ResultSave(currentVerseNum, correctVerseCount);
+            }
 
             LogSave("성구암송 종료");
         }
@@ -265,6 +320,8 @@ namespace BibleRecitation
                 labVerseBody.Text = listBV[index].Body;
                 
                 txtVerse.Text = string.Empty;
+
+                chkShow.Checked = false;
 
                 LogSave("다음 성구");
 
