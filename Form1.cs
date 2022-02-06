@@ -202,8 +202,6 @@ namespace BibleRecitation
             labCurrentVerse.Text = currentVerseNum.ToString();
             labCorrectVerse.Text = correctVerseCount.ToString();
 
-
-
             labVerseHead.Text = listBV[index].Head;
             txtVerseBody.Text = listBV[index].Body;
 
@@ -236,6 +234,8 @@ namespace BibleRecitation
                 timer2.Enabled = true;
                 timer2.Tick += timer2_Tick;
             }
+
+            txtVerse.Focus();
 
             LogSave("성구암송 시작");
 
@@ -305,13 +305,11 @@ namespace BibleRecitation
 
             for (int i = 0; i < len; i++)
             {
-                if (txtVerseBody.Text[i] == txtVerse.Text[i])
+                if (txtVerseBody.Text[i] == ' ' || txtVerseBody.Text[i] == txtVerse.Text[i])
                 {
                     txtVerseBody.Select(i, 1);
                     txtVerseBody.SelectionColor = Color.Blue;
-                    txtVerseBody.SelectionFont = new Font(txtVerseBody.Font.FontFamily,
-                                                             txtVerseBody.Font.Size,
-                                                             FontStyle.Bold);
+
                 }
                 else
                 {
@@ -319,7 +317,7 @@ namespace BibleRecitation
                     txtVerseBody.SelectionColor = Color.Red;
                     txtVerseBody.SelectionFont = new Font(txtVerseBody.Font.FontFamily,
                                                              txtVerseBody.Font.Size,
-                                                             FontStyle.Bold & FontStyle.Underline);
+                                                             FontStyle.Underline);
                 }
 
 
@@ -500,7 +498,7 @@ namespace BibleRecitation
         {
             if(e.KeyCode == Keys.Enter)
             {
-                NextVerse();
+                btnNext_Click(sender, e);
             }
         }
 

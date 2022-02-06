@@ -1,5 +1,6 @@
 ﻿namespace BibleRecitation
 {
+
     partial class Form1
     {
         /// <summary>
@@ -341,8 +342,10 @@
             this.txtVerseBody.Name = "txtVerseBody";
             this.txtVerseBody.ReadOnly = true;
             this.txtVerseBody.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
+            this.txtVerseBody.ShortcutsEnabled = false;
             this.txtVerseBody.Size = new System.Drawing.Size(1073, 278);
             this.txtVerseBody.TabIndex = 21;
+            this.txtVerseBody.TabStop = false;
             this.txtVerseBody.Text = "";
             // 
             // timer2
