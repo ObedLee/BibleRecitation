@@ -265,6 +265,7 @@ namespace BibleRecitation
             labVerseCheck.Text = string.Empty;
             txtVerse.Text = string.Empty;
             labTimer.Text = "00초";
+            txtName.Text = string.Empty;
 
             progressBar1.Value = 0;
 
