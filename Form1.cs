@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 
@@ -32,7 +33,7 @@ namespace BibleRecitation
         public Form1()
         {
             InitializeComponent();
-            
+
             progressBar1.Maximum = myTimer.GetMaxSec() * 100;
             timer1.Interval = 10;
 
@@ -81,7 +82,7 @@ namespace BibleRecitation
             string fileName = txtName.Text;
 
             string dirPath = Environment.CurrentDirectory + @"\Result";
-            string filePath = dirPath + "\\" + fileName + ".txt"; 
+            string filePath = dirPath + "\\" + fileName + ".txt";
             string temp;
 
             DirectoryInfo di = new DirectoryInfo(dirPath);
@@ -92,7 +93,7 @@ namespace BibleRecitation
                 if (!di.Exists) Directory.CreateDirectory(dirPath);
                 if (!fi.Exists)
                 {
-                    using(StreamWriter sw = new StreamWriter(filePath))
+                    using (StreamWriter sw = new StreamWriter(filePath))
                     {
                         temp = string.Format("[{0}] {1}개 중 {2}개 정답", DateTime.Now, all, correct);
                         sw.WriteLine(temp);
@@ -113,7 +114,7 @@ namespace BibleRecitation
                 temp = string.Format("{0} 결과 저장 완료", fileName);
                 LogSave(temp);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
@@ -201,8 +202,10 @@ namespace BibleRecitation
             labCurrentVerse.Text = currentVerseNum.ToString();
             labCorrectVerse.Text = correctVerseCount.ToString();
 
+
+
             labVerseHead.Text = listBV[index].Head;
-            labVerseBody.Text = listBV[index].Body;
+            txtVerseBody.Text = listBV[index].Body;
 
             btnStart.Text = "종료";
 
@@ -214,7 +217,7 @@ namespace BibleRecitation
             txtVerse.Enabled = true;
             numVerse.Enabled = false;
             chkShow.Enabled = true;
-            labVerseBody.Visible = false;
+            txtVerseBody.Visible = false;
 
             if (txtName.Text == string.Empty)
             {
@@ -226,6 +229,12 @@ namespace BibleRecitation
                 chkShow.Enabled = false;
                 timer1.Enabled = true;
                 timer1.Tick += timer1_Tick;
+            }
+            else
+            {
+                chkShow.Checked = true;
+                timer2.Enabled = true;
+                timer2.Tick += timer2_Tick;
             }
 
             LogSave("성구암송 시작");
@@ -242,17 +251,18 @@ namespace BibleRecitation
                 ResultSave(currentVerseNum, correctVerseCount);
             }
 
-            string temp = string.Format("{0}님은 {1}개 중 {2}개를 맞추셨습니다.", txtName.Text, currentVerseNum, correctVerseCount);
-            MessageBox.Show(temp, "성구암송 종료");
+            //string temp = string.Format("{0}님은 {1}개 중 {2}개를 맞추셨습니다.", txtName.Text, currentVerseNum, correctVerseCount);
+            //MessageBox.Show(temp, "성구암송 종료");
 
 
             // 암송 종료 후 컨트롤속성 수정
             timer1.Enabled = false;
+            timer2.Enabled = false;
             btnSTT.Enabled = false;
             gbMode.Enabled = true;
             txtName.Enabled = true;
             btnNext.Enabled = false;
-            labVerseBody.Visible = true;
+            txtVerseBody.Visible = true;
             txtVerse.Enabled = false;
             numVerse.Enabled = true;
             chkShow.Enabled = false;
@@ -261,7 +271,7 @@ namespace BibleRecitation
             // 암송 종료 후 텍스트 초기화
             btnStart.Text = "시작";
             labVerseHead.Text = "두란노 성구암송";
-            labVerseBody.Text = string.Empty;
+            txtVerseBody.Text = string.Empty;
             labVerseCheck.Text = string.Empty;
             txtVerse.Text = string.Empty;
             labTimer.Text = "00초";
@@ -280,6 +290,41 @@ namespace BibleRecitation
             listBV.Clear();
 
             LogSave("성구암송 종료");
+        }
+
+        // 실시간으로 체크하여 글씨 변경
+        private void RealTimeCheck()
+        {
+            int len = (txtVerseBody.Text.Length > txtVerse.Text.Length) ? txtVerse.Text.Length : txtVerseBody.Text.Length;
+
+            txtVerseBody.SelectAll();
+            txtVerseBody.SelectionColor = Color.Black;
+            txtVerseBody.SelectionFont = new Font(txtVerseBody.Font.FontFamily,
+                                                     txtVerseBody.Font.Size,
+                                                     FontStyle.Regular);
+
+            for (int i = 0; i < len; i++)
+            {
+                if (txtVerseBody.Text[i] == txtVerse.Text[i])
+                {
+                    txtVerseBody.Select(i, 1);
+                    txtVerseBody.SelectionColor = Color.Blue;
+                    txtVerseBody.SelectionFont = new Font(txtVerseBody.Font.FontFamily,
+                                                             txtVerseBody.Font.Size,
+                                                             FontStyle.Bold);
+                }
+                else
+                {
+                    txtVerseBody.Select(i, 1);
+                    txtVerseBody.SelectionColor = Color.Red;
+                    txtVerseBody.SelectionFont = new Font(txtVerseBody.Font.FontFamily,
+                                                             txtVerseBody.Font.Size,
+                                                             FontStyle.Bold & FontStyle.Underline);
+                }
+
+
+            }
+
         }
 
         // 성구 정답 확인 함수
@@ -319,11 +364,9 @@ namespace BibleRecitation
 
                 index = randArray[currentVerseNum-1];
                 labVerseHead.Text = listBV[index].Head;
-                labVerseBody.Text = listBV[index].Body;
+                txtVerseBody.Text = listBV[index].Body;
                 
                 txtVerse.Text = string.Empty;
-
-                chkShow.Checked = false;
 
                 LogSave("다음 성구");
 
@@ -436,15 +479,20 @@ namespace BibleRecitation
 
         }
 
+        private void timer2_Tick(object sender, EventArgs e)
+        {
+            RealTimeCheck();
+        }
+
         private void chkShow_CheckedChanged(object sender, EventArgs e)
         {
             if (chkShow.Checked == true)
             {
-                labVerseBody.Visible = true;
+                txtVerseBody.Visible = true;
             }
             else
             {
-                labVerseBody.Visible = false;
+                txtVerseBody.Visible = false;
             }
         }
 
@@ -460,5 +508,6 @@ namespace BibleRecitation
         {
             NextVerse();
         }
+
     }
 }

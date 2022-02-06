@@ -30,7 +30,6 @@
         {
             this.components = new System.ComponentModel.Container();
             this.btnSTT = new System.Windows.Forms.Button();
-            this.labVerseBody = new System.Windows.Forms.Label();
             this.btnStart = new System.Windows.Forms.Button();
             this.labVerseHead = new System.Windows.Forms.Label();
             this.txtVerse = new System.Windows.Forms.TextBox();
@@ -53,6 +52,8 @@
             this.label5 = new System.Windows.Forms.Label();
             this.btnNext = new System.Windows.Forms.Button();
             this.chkShow = new System.Windows.Forms.CheckBox();
+            this.txtVerseBody = new System.Windows.Forms.RichTextBox();
+            this.timer2 = new System.Windows.Forms.Timer(this.components);
             this.gbMode.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numVerse)).BeginInit();
             this.SuspendLayout();
@@ -74,20 +75,6 @@
             this.btnSTT.Text = "음성인식";
             this.btnSTT.UseVisualStyleBackColor = false;
             this.btnSTT.Click += new System.EventHandler(this.btnSTT_Click);
-            // 
-            // labVerseBody
-            // 
-            this.labVerseBody.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.labVerseBody.BackColor = System.Drawing.Color.Cornsilk;
-            this.labVerseBody.Font = new System.Drawing.Font("배달의민족 주아", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.labVerseBody.Location = new System.Drawing.Point(12, 162);
-            this.labVerseBody.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
-            this.labVerseBody.Name = "labVerseBody";
-            this.labVerseBody.Size = new System.Drawing.Size(1073, 278);
-            this.labVerseBody.TabIndex = 3;
-            this.labVerseBody.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // btnStart
             // 
@@ -341,12 +328,34 @@
             this.chkShow.UseVisualStyleBackColor = true;
             this.chkShow.CheckedChanged += new System.EventHandler(this.chkShow_CheckedChanged);
             // 
+            // txtVerseBody
+            // 
+            this.txtVerseBody.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtVerseBody.BackColor = System.Drawing.Color.Cornsilk;
+            this.txtVerseBody.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txtVerseBody.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.txtVerseBody.Font = new System.Drawing.Font("배달의민족 주아", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.txtVerseBody.Location = new System.Drawing.Point(12, 159);
+            this.txtVerseBody.Name = "txtVerseBody";
+            this.txtVerseBody.ReadOnly = true;
+            this.txtVerseBody.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
+            this.txtVerseBody.Size = new System.Drawing.Size(1073, 278);
+            this.txtVerseBody.TabIndex = 21;
+            this.txtVerseBody.Text = "";
+            // 
+            // timer2
+            // 
+            this.timer2.Tick += new System.EventHandler(this.timer2_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Ivory;
             this.ClientSize = new System.Drawing.Size(1099, 697);
+            this.Controls.Add(this.txtVerseBody);
             this.Controls.Add(this.chkShow);
             this.Controls.Add(this.btnNext);
             this.Controls.Add(this.label5);
@@ -366,7 +375,6 @@
             this.Controls.Add(this.txtVerse);
             this.Controls.Add(this.labVerseHead);
             this.Controls.Add(this.btnStart);
-            this.Controls.Add(this.labVerseBody);
             this.Controls.Add(this.btnSTT);
             this.Font = new System.Drawing.Font("배달의민족 주아", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
@@ -385,7 +393,6 @@
 
         #endregion
         private System.Windows.Forms.Button btnSTT;
-        private System.Windows.Forms.Label labVerseBody;
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Label labVerseHead;
         private System.Windows.Forms.TextBox txtVerse;
@@ -408,6 +415,8 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button btnNext;
         private System.Windows.Forms.CheckBox chkShow;
+        private System.Windows.Forms.RichTextBox txtVerseBody;
+        private System.Windows.Forms.Timer timer2;
     }
 }
 
